@@ -34,18 +34,24 @@ impl Outcome {
             Outcome::Draw => 3,
         }
     }
+
+    fn from_str_part2(given: &str) -> Self {
+        match given {
+            "X" => Outcome::Lose,
+            "Y" => Outcome::Draw,
+            "Z" => Outcome::Win,
+            _ => panic!(),
+        }
+    }
 }
 
 impl RPS {
-    fn from_str(given: &str) -> RPS {
+    fn from_str(given: &str) -> Self {
         match given {
             "A" | "X" => RPS::Rock,
             "B" | "Y" => RPS::Paper,
             "C" | "Z" => RPS::Scissors,
-            blah => {
-                println!(">> Unexpected: '{}'", blah);
-                panic!()
-            }
+            _ => panic!(),
         }
     }
 
@@ -76,9 +82,29 @@ impl RPS {
             RPS::Scissors => 3,
         }
     }
+
+    fn make_choice(&self, outcome: Outcome) -> Self {
+        match self {
+            RPS::Rock => match outcome {
+                Outcome::Win => Self::Paper,
+                Outcome::Lose => Self::Scissors,
+                Outcome::Draw => Self::Rock,
+            },
+            RPS::Paper => match outcome {
+                Outcome::Win => Self::Scissors,
+                Outcome::Lose => Self::Rock,
+                Outcome::Draw => Self::Paper,
+            },
+            RPS::Scissors => match outcome {
+                Outcome::Win => Self::Rock,
+                Outcome::Lose => Self::Paper,
+                Outcome::Draw => Self::Scissors,
+            },
+        }
+    }
 }
 
-fn to_rps(input: &str) -> Vec<Vec<RPS>> {
+fn to_rps_part1(input: &str) -> Vec<Vec<RPS>> {
     let x: Vec<Vec<RPS>> = input
         .split("\n")
         .map(|line| line.split(" ").map(|c| RPS::from_str(c)).collect())
@@ -86,8 +112,25 @@ fn to_rps(input: &str) -> Vec<Vec<RPS>> {
     x
 }
 
+fn to_rps_part2(input: &str) -> Vec<(RPS, RPS)> {
+    let x: Vec<(RPS, RPS)> = input
+        .split("\n")
+        .map(|line| {
+            let parts: Vec<&str> = line.split(" ").collect();
+            match &parts[..] {
+                &[opponent, me, ..] => {
+                    let opp_rps = RPS::from_str(opponent);
+                    (opp_rps, opp_rps.make_choice(Outcome::from_str_part2(me)))
+                }
+                _ => unreachable!(),
+            }
+        })
+        .collect();
+    x
+}
+
 fn part1(input: &str) -> Result<()> {
-    let games = to_rps(input);
+    let games = to_rps_part1(input);
 
     let total_score: u32 = games
         .iter()
@@ -97,11 +140,23 @@ fn part1(input: &str) -> Result<()> {
         })
         .sum();
 
-    println!("Total Score: {}", total_score);
+    println!("Part 1 - Total Score: {}", total_score);
 
     Ok(())
 }
 
 fn part2(input: &str) -> Result<()> {
+    let games = to_rps_part2(input);
+
+    let total_score: u32 = games
+        .iter()
+        .map(|game| {
+            let (opponent, me) = game;
+            me.points() + me.play(*opponent).points()
+        })
+        .sum();
+
+    println!("Part 2 - Total Score: {}", total_score);
+
     Ok(())
 }
