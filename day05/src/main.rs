@@ -13,11 +13,13 @@ fn main() -> Result<()> {
     let layout: Vec<&str> = data[0].split("\n").collect();
     let raw_procedure: Vec<&str> = data[1].split("\n").filter(|line| *line != "").collect();
 
-    let mut stacks = parse_stacks_layout(&layout);
     let procedure = parse_procedure(&raw_procedure);
 
-    part1(&mut stacks, procedure)?;
-    part2(&input)?;
+    let mut stacks = parse_stacks_layout(&layout);
+    part1(&mut stacks, &procedure)?;
+
+    let mut stacks = parse_stacks_layout(&layout);
+    part2(&mut stacks, &procedure)?;
 
     Ok(())
 }
@@ -68,11 +70,11 @@ fn parse_procedure(procedure: &Vec<&str>) -> Vec<(usize, usize, usize)> {
         .collect()
 }
 
-fn part1(stacks: &mut Vec<Vec<char>>, procedure: Vec<(usize, usize, usize)>) -> Result<()> {
+fn part1(stacks: &mut Vec<Vec<char>>, procedure: &Vec<(usize, usize, usize)>) -> Result<()> {
     for (num, src, dst) in procedure {
-        for _ in 0..num {
-            let thing = stacks[src].pop().unwrap();
-            stacks[dst].push(thing);
+        for _ in 0..*num {
+            let thing = stacks[*src].pop().unwrap();
+            stacks[*dst].push(thing);
         }
     }
 
@@ -84,6 +86,29 @@ fn part1(stacks: &mut Vec<Vec<char>>, procedure: Vec<(usize, usize, usize)>) -> 
     Ok(())
 }
 
-fn part2(input: &str) -> Result<()> {
+fn part2(stacks: &mut Vec<Vec<char>>, procedure: &Vec<(usize, usize, usize)>) -> Result<()> {
+    let mut intermediate_stack: Vec<char> = vec![];
+
+    for (num, src, dst) in procedure {
+        for _ in 0..*num {
+            let thing = stacks[*src].pop().unwrap();
+            intermediate_stack.push(thing);
+        }
+
+        loop {
+            match intermediate_stack.pop() {
+                Some(c) => {
+                    stacks[*dst].push(c);
+                }
+                None => break,
+            }
+        }
+    }
+
+    for i in 0..stacks.len() {
+        print!("{}", stacks[i].pop().unwrap());
+    }
+    println!("");
+
     Ok(())
 }
